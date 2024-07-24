@@ -53,6 +53,7 @@ pub fn run_gaia_and_tendermint(
     let home = tendermint.to_path_buf();
     let address = tendermint.proxy_addr().to_owned();
     let rest_addr = { std::net::TcpListener::bind("127.0.0.1:0")?.local_addr()? };
+    let grpc_addr = { std::net::TcpListener::bind("127.0.0.1:0")?.local_addr()? };
 
     let server_thread = std::thread::spawn(move || {
         let node = NodeApplication::<GaiaCore, _, _, _>::new(
@@ -66,6 +67,7 @@ pub fn run_gaia_and_tendermint(
             home,
             address: Some(address),
             rest_listen_addr: Some(rest_addr),
+            grpc_listen_addr: Some(grpc_addr),
             read_buf_size: 1048576,
             log_level: LogLevel::Off,
             min_gas_prices: Default::default(),

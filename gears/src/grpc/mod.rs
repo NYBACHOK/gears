@@ -1,4 +1,4 @@
-use std::convert::Infallible;
+use std::{convert::Infallible, net::SocketAddr};
 
 use tonic::{
     body::BoxBody,
@@ -14,9 +14,9 @@ mod error;
 pub mod health;
 pub mod tx;
 
-pub fn run_grpc_server(router: Router<Identity>) {
+pub fn run_grpc_server(router: Router<Identity>, address: Option<SocketAddr>) {
     std::thread::spawn(move || {
-        let result = runtime().block_on(launch(router));
+        let result = runtime().block_on(launch(router, address));
         if let Err(err) = result {
             panic!("Failed to run gRPC server with err: {}", err)
         }
@@ -37,10 +37,15 @@ trait GService:
 {
 }
 
-async fn launch(router: Router<Identity>) -> Result<(), Box<dyn std::error::Error>> {
-    let address = "127.0.0.1:8080"
-        .parse()
-        .expect("hard coded address is valid");
+async fn launch(
+    router: Router<Identity>,
+    address: Option<SocketAddr>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let address = address.unwrap_or(
+        "127.0.0.1:8080"
+            .parse()
+            .expect("hard coded address is valid"),
+    );
 
     tracing::info!("gRPC server running at {}", address);
     router.serve(address).await?;

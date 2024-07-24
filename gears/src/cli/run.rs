@@ -50,6 +50,7 @@ impl<T: ApplicationInfo> From<CliRunCommand<T>> for RunCommand {
             read_buf_size,
             log_level,
             min_gas_prices,
+            grpc_listen_addr: None,
         }
     }
 }
