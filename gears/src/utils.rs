@@ -116,7 +116,7 @@ impl TmpChild {
         )?; // TODO: make it work for windows too?
 
         let (rpc_addr, node_addr, proxy_addr) = three_random_adresses()?;
-        let node_argument = format!("--p2p.laddr tcp://127.0.0.1:{}", node_addr.port());
+        let node_argument = format!("--p2p.laddr tcp://0.0.0.0:{}", node_addr.port());
         let rpc_argument = format!("--rpc.laddr tcp://127.0.0.1:{}", rpc_addr.port());
         let proxy_argument = format!("--proxy_app tcp://127.0.0.1:{}", proxy_addr.port());
 
