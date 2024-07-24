@@ -21,10 +21,7 @@ use gears::{
     store::database::rocks::RocksDBBuilder,
     types::base::coins::UnsignedCoins,
 };
-use gears::{
-    types::address::AccAddress,
-    utils::{TempDir, TmpChild},
-};
+use gears::{types::address::AccAddress, utils::TmpChild};
 
 pub const TENDERMINT_PATH: &str = "./tests/assets";
 pub const BIP39_MNEMONIC : &str = "race draft rival universe maid cheese steel logic crowd fork comic easy truth drift tomorrow eye buddy head time cash swing swift midnight borrow";
@@ -45,21 +42,18 @@ pub fn acc_address() -> AccAddress {
 pub fn run_gaia_and_tendermint(
     coins: u32,
 ) -> anyhow::Result<(TmpChild, std::thread::JoinHandle<()>)> {
-    let tmp_dir = TempDir::new()?;
-    let tmp_path = tmp_dir.to_path_buf();
-
-    key_add(tmp_dir.to_path_buf(), KEY_NAME, BIP39_MNEMONIC)?;
-
     let tendermint = TmpChild::run_tendermint::<_, AppConfig>(
-        tmp_dir,
         TENDERMINT_PATH,
         &MockGenesis::default(),
         acc_address(),
         coins,
     )?;
 
+    key_add(tendermint.to_path_buf(), KEY_NAME, BIP39_MNEMONIC)?;
+
     std::thread::sleep(Duration::from_secs(10));
 
+    let home = tendermint.to_path_buf();
     let server_thread = std::thread::spawn(move || {
         let node = NodeApplication::<GaiaCore, _, _, _>::new(
             GaiaCore,
@@ -69,7 +63,7 @@ pub fn run_gaia_and_tendermint(
         );
 
         let cmd = RunCommand {
-            home: tmp_path,
+            home,
             address: Some(DEFAULT_ADDRESS),
             rest_listen_addr: Some(DEFAULT_REST_LISTEN_ADDR),
             read_buf_size: 1048576,

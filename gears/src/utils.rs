@@ -46,12 +46,13 @@ impl Drop for TmpChild {
 
 impl TmpChild {
     pub fn run_tendermint<G: Genesis, AC: crate::config::ApplicationConfig>(
-        tmp_dir: TempDir,
         path_to_tendermint: &(impl AsRef<Path> + ?Sized),
         genesis: &G,
         address: AccAddress,
         coins: u32,
     ) -> anyhow::Result<Self> {
+        let tmp_dir = TempDir::new()?;
+
         dircpy::CopyBuilder::new(path_to_tendermint, &tmp_dir)
             .overwrite(true)
             .run()?;
