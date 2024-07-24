@@ -20,7 +20,6 @@ use gears::{
         query::{run_query, QueryCommand},
         tx::{run_tx, Keyring, LocalInfo, TxCommand},
     },
-    config::DEFAULT_TENDERMINT_RPC_ADDRESS,
     tendermint::{
         abci::{Event, EventAttribute},
         rpc::response::tx::broadcast::Response,
@@ -37,11 +36,10 @@ use crate::utilities::KEY_NAME;
 mod utilities;
 
 #[test]
-#[ignore = "rust usually run test in || while this tests be started ony by one"]
 fn balances_query() -> anyhow::Result<()> {
     let coins = 34_u32;
 
-    let (_tendermint, _server_thread) = run_gaia_and_tendermint(coins)?;
+    let (tendermint, _server_thread) = run_gaia_and_tendermint(coins)?;
 
     let query = BalancesCommand {
         address: AccAddress::from_bech32("cosmos1syavy2npfyt9tcncdtsdzf7kny9lh777pahuux")?,
@@ -50,7 +48,7 @@ fn balances_query() -> anyhow::Result<()> {
 
     let result = run_query(
         QueryCommand {
-            node: DEFAULT_TENDERMINT_RPC_ADDRESS.parse()?,
+            node: format!("http://localhost:{}/", tendermint.rpc_addr().port()).parse()?,
             height: None,
             inner: WrappedGaiaQueryCommands(GaiaQueryCommands::Bank(BankQueryCli {
                 command: BankQueryCommands::Balances(query),
@@ -75,13 +73,12 @@ fn balances_query() -> anyhow::Result<()> {
 }
 
 #[test]
-#[ignore = "rust usually run test in || while this tests be started ony by one"]
 fn denom_query() -> anyhow::Result<()> {
-    let (_tendermint, _server_thread) = run_gaia_and_tendermint(34)?;
+    let (tendermint, _server_thread) = run_gaia_and_tendermint(34)?;
 
     let result = run_query(
         QueryCommand {
-            node: DEFAULT_TENDERMINT_RPC_ADDRESS.parse()?,
+            node: format!("http://localhost:{}/", tendermint.rpc_addr().port()).parse()?,
             height: None,
             inner: WrappedGaiaQueryCommands(GaiaQueryCommands::Bank(BankQueryCli {
                 command: BankQueryCommands::DenomMetadata { pagination: None },
@@ -103,7 +100,6 @@ fn denom_query() -> anyhow::Result<()> {
 }
 
 #[test]
-#[ignore = "rust usually run test in || while this tests be started ony by one"]
 fn send_tx() -> anyhow::Result<()> {
     let coins = 200_000_000_u32;
     let (tendermint, _server_thread) = run_gaia_and_tendermint(coins)?;
@@ -120,7 +116,7 @@ fn send_tx() -> anyhow::Result<()> {
                 from_key: KEY_NAME.to_owned(),
                 home: tendermint.to_path_buf(),
             }),
-            node: DEFAULT_TENDERMINT_RPC_ADDRESS.parse()?,
+            node: format!("http://localhost:{}/", tendermint.rpc_addr().port()).parse()?,
             chain_id: ChainId::from_str("test-chain")?,
             fees: None,
             inner: WrappedGaiaTxCommands(GaiaTxCommands::Bank(BankTxCli { command: tx_cmd })),
@@ -169,7 +165,6 @@ fn send_tx() -> anyhow::Result<()> {
 
 /// NOTE: This test doesn't check resulted hash and what events occured. It tries to check that our app works under *sign* some load
 #[test]
-#[ignore = "rust usually run test in || while this tests be started ony by one"]
 fn send_tx_in_parallel() -> anyhow::Result<()> {
     let coins = 200_000_000_u32;
     let (tendermint, _server_thread) = run_gaia_and_tendermint(coins)?;
@@ -194,7 +189,7 @@ fn send_tx_in_parallel() -> anyhow::Result<()> {
                     from_key: KEY_NAME.to_owned(),
                     home: tendermint.to_path_buf(),
                 }),
-                node: DEFAULT_TENDERMINT_RPC_ADDRESS.parse()?,
+                node: format!("http://localhost:{}/", tendermint.rpc_addr().port()).parse()?,
                 chain_id: ChainId::from_str("test-chain")?,
                 fees: None,
                 inner: WrappedGaiaTxCommands(GaiaTxCommands::Bank(BankTxCli { command: tx_cmd })),

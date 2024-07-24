@@ -17,7 +17,6 @@ use gears::{
             AppCommands,
         },
     },
-    config::{DEFAULT_ADDRESS, DEFAULT_REST_LISTEN_ADDR},
     store::database::rocks::RocksDBBuilder,
     types::base::coins::UnsignedCoins,
 };
@@ -51,9 +50,10 @@ pub fn run_gaia_and_tendermint(
 
     key_add(tendermint.to_path_buf(), KEY_NAME, BIP39_MNEMONIC)?;
 
-    std::thread::sleep(Duration::from_secs(10));
-
     let home = tendermint.to_path_buf();
+    let address = tendermint.proxy_addr().to_owned();
+    let rest_addr = { std::net::TcpListener::bind("127.0.0.1:0")?.local_addr()? };
+
     let server_thread = std::thread::spawn(move || {
         let node = NodeApplication::<GaiaCore, _, _, _>::new(
             GaiaCore,
@@ -64,8 +64,8 @@ pub fn run_gaia_and_tendermint(
 
         let cmd = RunCommand {
             home,
-            address: Some(DEFAULT_ADDRESS),
-            rest_listen_addr: Some(DEFAULT_REST_LISTEN_ADDR),
+            address: Some(address),
+            rest_listen_addr: Some(rest_addr),
             read_buf_size: 1048576,
             log_level: LogLevel::Off,
             min_gas_prices: Default::default(),

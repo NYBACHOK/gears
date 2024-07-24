@@ -9,7 +9,6 @@ use gaia_rs::{
 };
 use gears::{
     commands::client::query::{run_query, QueryCommand},
-    config::DEFAULT_TENDERMINT_RPC_ADDRESS,
     types::account::{Account, BaseAccount},
     types::address::AccAddress,
 };
@@ -20,9 +19,8 @@ use utilities::run_gaia_and_tendermint;
 mod utilities;
 
 #[test]
-#[ignore = "rust usually run test in || while this tests be started ony by one"]
 fn account_query() -> anyhow::Result<()> {
-    let (_tendermint, _server_thread) = run_gaia_and_tendermint(34)?;
+    let (tendermint, _server_thread) = run_gaia_and_tendermint(34)?;
 
     let acc_adress = AccAddress::from_bech32("cosmos1syavy2npfyt9tcncdtsdzf7kny9lh777pahuux")
         .expect("Valid value");
@@ -30,9 +28,9 @@ fn account_query() -> anyhow::Result<()> {
     let query = AccountCommand {
         address: acc_adress.clone(),
     };
-
+ 
     let cmd = QueryCommand {
-        node: DEFAULT_TENDERMINT_RPC_ADDRESS.parse()?,
+        node: format!("http://localhost:{}/", tendermint.rpc_addr().port()).parse()?,
         height: None,
         inner: WrappedGaiaQueryCommands(GaiaQueryCommands::Auth(AuthQueryCli {
             command: AuthCommands::Account(query),
