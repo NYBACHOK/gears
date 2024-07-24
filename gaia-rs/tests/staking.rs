@@ -131,7 +131,7 @@ fn create_validator() -> anyhow::Result<()> {
         deliver_tx,
         hash: _,
         height: _,
-    } = create_validator_tx(tendermint.1.to_path_buf())?;
+    } = create_validator_tx(tendermint.to_path_buf())?;
     assert!(check_tx.code.is_ok());
     assert_eq!(check_tx.events.len(), 0);
     assert!(deliver_tx.code.is_ok());
@@ -175,7 +175,7 @@ fn delegate() -> anyhow::Result<()> {
         deliver_tx,
         hash: _,
         height: _,
-    } = delegate_tx(tendermint.1.to_path_buf())?;
+    } = delegate_tx(tendermint.to_path_buf())?;
 
     assert!(check_tx.code.is_ok());
     assert_eq!(check_tx.events.len(), 0);
@@ -261,7 +261,7 @@ fn redelegate() -> anyhow::Result<()> {
         deliver_tx,
         hash: _,
         height: _,
-    } = redelegate_tx(tendermint.1.to_path_buf())?;
+    } = redelegate_tx(tendermint.to_path_buf())?;
 
     assert!(check_tx.code.is_ok());
     assert_eq!(check_tx.events.len(), 0);
@@ -294,7 +294,7 @@ fn redelegate_failed_on_invalid_amount() -> anyhow::Result<()> {
         denom: "uatom".try_into()?,
         amount: Uint256::from(100u64),
     };
-    new_validator(KEY_NAME, tendermint.1.to_path_buf(), pubkey, amount, "test")?;
+    new_validator(KEY_NAME, tendermint.to_path_buf(), pubkey, amount, "test")?;
 
     // send coins to another account to register it in the chain
     let tx_cmd = BankCommands::Send {
@@ -302,12 +302,12 @@ fn redelegate_failed_on_invalid_amount() -> anyhow::Result<()> {
         amount: UnsignedCoin::from_str("30uatom")?,
     };
     let command = GaiaTxCommands::Bank(BankTxCli { command: tx_cmd });
-    run_tx_local(KEY_NAME, tendermint.1.to_path_buf(), command)?;
+    run_tx_local(KEY_NAME, tendermint.to_path_buf(), command)?;
 
     // create local keypair for second account
     let mnemonic = "utility radio trust maid picture hold palace heart craft fruit recycle void embrace gospel write what soccer resemble yellow decade rug knock control celery";
     let name = "foo";
-    key_add(tendermint.1.to_path_buf(), name, mnemonic)?;
+    key_add(tendermint.to_path_buf(), name, mnemonic)?;
 
     // create destination validator
     let pubkey = "{\"type\":\"tendermint/PubKeyEd25519\",\"value\":\"AAAAC3NzaC1lZDI1NTE5AAAAIFFTUWrymqRbtqMGhZACRrr7sWUnqGB8DR+6ob9d0Fhz\"}";
@@ -315,7 +315,7 @@ fn redelegate_failed_on_invalid_amount() -> anyhow::Result<()> {
         denom: "uatom".try_into()?,
         amount: Uint256::from(10u64),
     };
-    new_validator(name, tendermint.1.to_path_buf(), pubkey, amount, name)?;
+    new_validator(name, tendermint.to_path_buf(), pubkey, amount, name)?;
 
     // create delegation to source validator
     let amount = UnsignedCoin {
@@ -324,7 +324,7 @@ fn redelegate_failed_on_invalid_amount() -> anyhow::Result<()> {
     };
     new_delegation(
         KEY_NAME,
-        tendermint.1.to_path_buf(),
+        tendermint.to_path_buf(),
         "cosmosvaloper15jlqmacda2pzerhw48gvvxskweg8sz2scfexfk",
         amount,
     )?;
@@ -350,7 +350,7 @@ fn redelegate_failed_on_invalid_amount() -> anyhow::Result<()> {
         deliver_tx,
         hash: _,
         height: _,
-    } = run_tx_local(KEY_NAME, tendermint.1.to_path_buf(), command)?;
+    } = run_tx_local(KEY_NAME, tendermint.to_path_buf(), command)?;
 
     assert!(check_tx.code.is_ok());
     assert!(deliver_tx.code.is_err());
@@ -363,7 +363,7 @@ fn redelegate_failed_on_invalid_amount() -> anyhow::Result<()> {
 fn query_validator() -> anyhow::Result<()> {
     let coins = 200_000_000_u32;
     let (tendermint, _server_thread) = run_gaia_and_tendermint(coins)?;
-    create_validator_tx(tendermint.1.to_path_buf())?;
+    create_validator_tx(tendermint.to_path_buf())?;
 
     let query = ValidatorCommand {
         address: ValAddress::from_bech32("cosmosvaloper1syavy2npfyt9tcncdtsdzf7kny9lh777yfrfs4")?,
@@ -430,7 +430,7 @@ fn query_delegation() -> anyhow::Result<()> {
     // function performs two self delegations:
     // first is a transaction with creation of a validator: amount 100 uatoms
     // second is delegation of 10 uatoms to self
-    delegate_tx(tendermint.1.to_path_buf())?;
+    delegate_tx(tendermint.to_path_buf())?;
 
     let delegator_address = AccAddress::from_bech32(ACC_ADDRESS)?;
     let validator_address =
@@ -470,7 +470,7 @@ fn query_delegation() -> anyhow::Result<()> {
 fn query_redelegation() -> anyhow::Result<()> {
     let coins = 200_000_000_u32;
     let (tendermint, _server_thread) = run_gaia_and_tendermint(coins)?;
-    redelegate_tx(tendermint.1.to_path_buf())?;
+    redelegate_tx(tendermint.to_path_buf())?;
 
     let delegator_address = AccAddress::from_bech32(ACC_ADDRESS)?;
     let src_validator_address =

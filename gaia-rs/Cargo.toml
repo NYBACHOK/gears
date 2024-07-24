@@ -54,3 +54,4 @@ hex = { workspace = true }
 bip32 = { workspace = true }
 keyring = { path = "../keyring" }
 vec1 = { workspace = true }
+# random-port = "0.1.1"

@@ -118,7 +118,7 @@ fn send_tx() -> anyhow::Result<()> {
             keyring: Keyring::Local(LocalInfo {
                 keyring_backend: KeyringBackend::Test,
                 from_key: KEY_NAME.to_owned(),
-                home: tendermint.1.to_path_buf(),
+                home: tendermint.to_path_buf(),
             }),
             node: DEFAULT_TENDERMINT_RPC_ADDRESS.parse()?,
             chain_id: ChainId::from_str("test-chain")?,
@@ -192,7 +192,7 @@ fn send_tx_in_parallel() -> anyhow::Result<()> {
                 keyring: Keyring::Local(LocalInfo {
                     keyring_backend: KeyringBackend::Test,
                     from_key: KEY_NAME.to_owned(),
-                    home: tendermint.1.to_path_buf(),
+                    home: tendermint.to_path_buf(),
                 }),
                 node: DEFAULT_TENDERMINT_RPC_ADDRESS.parse()?,
                 chain_id: ChainId::from_str("test-chain")?,

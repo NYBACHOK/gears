@@ -1,4 +1,8 @@
-use std::{path::Path, process::Child, str::FromStr};
+use std::{
+    path::{Path, PathBuf},
+    process::Child,
+    str::FromStr,
+};
 
 use crate::{
     baseapp::genesis::Genesis,
@@ -20,12 +24,21 @@ use tendermint::types::chain_id::ChainId;
 
 /// Struct for process which lauched from tmp dir
 #[derive(Debug)]
-pub struct TmpChild(pub Child, pub TempDir);
+pub struct TmpChild {
+    pub child: Child,
+    pub tmp_dir: TempDir,
+}
+
+impl TmpChild {
+    pub fn to_path_buf(&self) -> PathBuf {
+        self.tmp_dir.to_path_buf()
+    }
+}
 
 impl Drop for TmpChild {
     fn drop(&mut self) {
         // Stop child process before deletion of tmp dir
-        while let Err(_) = self.0.kill() {
+        while let Err(_) = self.child.kill() {
             std::thread::sleep(std::time::Duration::from_millis(100))
         }
     }
@@ -91,6 +104,6 @@ impl TmpChild {
 
         let child = run_script::spawn(&script, &vec![], &options)?;
 
-        Ok(Self(child, tmp_dir))
+        Ok(Self { child, tmp_dir })
     }
 }
