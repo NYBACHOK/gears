@@ -37,23 +37,40 @@ pub fn acc_address() -> AccAddress {
     AccAddress::from_bech32(ACC_ADDRESS).expect("Default Address should be valid")
 }
 
+#[derive(Debug)]
+pub struct TestOptions {
+    pub rpc: u16,
+    pub p2p: u16,
+    pub proxy: u16,
+    pub rest_addr: u16,
+    pub grpc_addr: u16,
+}
+
 /// Helper method to start gaia node and tendermint in tmp folder
 pub fn run_gaia_and_tendermint(
     coins: u32,
+    TestOptions {
+        rpc,
+        p2p,
+        proxy,
+        rest_addr,
+        grpc_addr,
+    }: TestOptions,
 ) -> anyhow::Result<(TmpChild, std::thread::JoinHandle<()>)> {
     let tendermint = TmpChild::run_tendermint::<_, AppConfig>(
         TENDERMINT_PATH,
         &MockGenesis::default(),
         acc_address(),
         coins,
+        p2p,
+        rpc,
+        proxy,
     )?;
 
     key_add(tendermint.to_path_buf(), KEY_NAME, BIP39_MNEMONIC)?;
 
     let home = tendermint.to_path_buf();
     let address = tendermint.proxy_addr().to_owned();
-    let rest_addr = { std::net::TcpListener::bind("127.0.0.1:0")?.local_addr()? };
-    let grpc_addr = { std::net::TcpListener::bind("127.0.0.1:0")?.local_addr()? };
 
     let server_thread = std::thread::spawn(move || {
         let node = NodeApplication::<GaiaCore, _, _, _>::new(
@@ -65,9 +82,21 @@ pub fn run_gaia_and_tendermint(
 
         let cmd = RunCommand {
             home,
-            address: Some(address),
-            rest_listen_addr: Some(rest_addr),
-            grpc_listen_addr: Some(grpc_addr),
+            address: Some(
+                format!("127.0.0.1:{}", address)
+                    .parse()
+                    .expect("default is valid"),
+            ),
+            rest_listen_addr: Some(
+                format!("127.0.0.1:{}", rest_addr)
+                    .parse()
+                    .expect("default is valid"),
+            ),
+            grpc_listen_addr: Some(
+                format!("127.0.0.1:{}", grpc_addr)
+                    .parse()
+                    .expect("default is valid"),
+            ),
             read_buf_size: 1048576,
             log_level: LogLevel::Off,
             min_gas_prices: Default::default(),

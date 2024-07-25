@@ -1,5 +1,4 @@
 use std::{
-    net::{SocketAddr, TcpListener},
     path::{Path, PathBuf},
     process::Child,
     str::FromStr,
@@ -28,9 +27,9 @@ use tendermint::types::chain_id::ChainId;
 pub struct TmpChild {
     pub child: Child,
     pub tmp_dir: TempDir,
-    rpc_addr: SocketAddr,
-    node_addr: SocketAddr,
-    proxy_addr: SocketAddr,
+    rpc_addr: u16,
+    p2p_addr: u16,
+    proxy_addr: u16,
 }
 
 impl TmpChild {
@@ -39,18 +38,18 @@ impl TmpChild {
     }
 
     /// tcp://0.0.0.0:26656
-    pub fn node_addr(&self) -> &SocketAddr {
-        &self.node_addr
+    pub fn p2p_addr(&self) -> u16 {
+        self.p2p_addr
     }
 
     /// tcp://127.0.0.1:26657
-    pub fn rpc_addr(&self) -> &SocketAddr {
-        &self.rpc_addr
+    pub fn rpc_addr(&self) -> u16 {
+        self.rpc_addr
     }
 
     /// tcp://127.0.0.1:26658
-    pub fn proxy_addr(&self) -> &SocketAddr {
-        &self.proxy_addr
+    pub fn proxy_addr(&self) -> u16 {
+        self.proxy_addr
     }
 }
 
@@ -69,6 +68,9 @@ impl TmpChild {
         genesis: &G,
         address: AccAddress,
         coins: u32,
+        p2p_addr: u16,
+        rpc_addr: u16,
+        proxy_addr: u16,
     ) -> anyhow::Result<Self> {
         let tmp_dir = TempDir::new()?;
 
@@ -115,13 +117,12 @@ impl TmpChild {
             &options,
         )?; // TODO: make it work for windows too?
 
-        let (rpc_addr, node_addr, proxy_addr) = three_random_adresses()?;
-        let node_argument = format!("--p2p.laddr tcp://0.0.0.0:{}", node_addr.port());
-        let rpc_argument = format!("--rpc.laddr tcp://127.0.0.1:{}", rpc_addr.port());
-        let proxy_argument = format!("--proxy_app tcp://127.0.0.1:{}", proxy_addr.port());
+        let p2p_argument = format!("--p2p.laddr tcp://0.0.0.0:{}", p2p_addr);
+        let rpc_argument = format!("--rpc.laddr tcp://127.0.0.1:{}", rpc_addr);
+        let proxy_argument = format!("--proxy_app tcp://127.0.0.1:{}", proxy_addr);
 
         let script = format!(
-            "./tendermint start --home {} {node_argument} {rpc_argument} {proxy_argument}",
+            "./tendermint start --home {} {p2p_argument} {rpc_argument} {proxy_argument}",
             tmp_dir
                 .to_str()
                 .ok_or(anyhow!("failed to get path to tmp folder"))?
@@ -133,20 +134,8 @@ impl TmpChild {
             child,
             tmp_dir,
             rpc_addr,
-            node_addr,
+            p2p_addr,
             proxy_addr,
         })
     }
-}
-
-fn three_random_adresses() -> std::io::Result<(SocketAddr, SocketAddr, SocketAddr)> {
-    let first = TcpListener::bind("127.0.0.1:0")?;
-    let second = TcpListener::bind("127.0.0.1:0")?;
-    let third = TcpListener::bind("127.0.0.1:0")?;
-
-    Ok((
-        first.local_addr()?,
-        second.local_addr()?,
-        third.local_addr()?,
-    ))
 }

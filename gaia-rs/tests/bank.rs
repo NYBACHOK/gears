@@ -28,7 +28,7 @@ use gears::{
     types::address::AccAddress,
     types::{base::coin::UnsignedCoin, denom::Denom},
 };
-use utilities::run_gaia_and_tendermint;
+use utilities::{run_gaia_and_tendermint, TestOptions};
 
 use crate::utilities::KEY_NAME;
 
@@ -37,9 +37,19 @@ mod utilities;
 
 #[test]
 fn balances_query() -> anyhow::Result<()> {
+    const RPC_ADDR: u16 = 11_000;
     let coins = 34_u32;
 
-    let (tendermint, _server_thread) = run_gaia_and_tendermint(coins)?;
+    let (_tendermint, _server_thread) = run_gaia_and_tendermint(
+        coins,
+        TestOptions {
+            rpc: RPC_ADDR,
+            p2p: 11_001,
+            proxy: 11_002,
+            rest_addr: 11_003,
+            grpc_addr: 11_004,
+        },
+    )?;
 
     let query = BalancesCommand {
         address: AccAddress::from_bech32("cosmos1syavy2npfyt9tcncdtsdzf7kny9lh777pahuux")?,
@@ -48,7 +58,7 @@ fn balances_query() -> anyhow::Result<()> {
 
     let result = run_query(
         QueryCommand {
-            node: format!("http://localhost:{}/", tendermint.rpc_addr().port()).parse()?,
+            node: format!("http://localhost:{}/", RPC_ADDR).parse()?,
             height: None,
             inner: WrappedGaiaQueryCommands(GaiaQueryCommands::Bank(BankQueryCli {
                 command: BankQueryCommands::Balances(query),
@@ -74,11 +84,22 @@ fn balances_query() -> anyhow::Result<()> {
 
 #[test]
 fn denom_query() -> anyhow::Result<()> {
-    let (tendermint, _server_thread) = run_gaia_and_tendermint(34)?;
+    const RPC_ADDR: u16 = 20_010;
+
+    let (_tendermint, _server_thread) = run_gaia_and_tendermint(
+        34,
+        TestOptions {
+            rpc: RPC_ADDR,
+            p2p: 11_011,
+            proxy: 11_012,
+            rest_addr: 11_013,
+            grpc_addr: 11_014,
+        },
+    )?;
 
     let result = run_query(
         QueryCommand {
-            node: format!("http://localhost:{}/", tendermint.rpc_addr().port()).parse()?,
+            node: format!("http://localhost:{}/", RPC_ADDR).parse()?,
             height: None,
             inner: WrappedGaiaQueryCommands(GaiaQueryCommands::Bank(BankQueryCli {
                 command: BankQueryCommands::DenomMetadata { pagination: None },
@@ -101,8 +122,19 @@ fn denom_query() -> anyhow::Result<()> {
 
 #[test]
 fn send_tx() -> anyhow::Result<()> {
+    const RPC_ADDR: u16 = 11_020;
+
     let coins = 200_000_000_u32;
-    let (tendermint, _server_thread) = run_gaia_and_tendermint(coins)?;
+    let (tendermint, _server_thread) = run_gaia_and_tendermint(
+        coins,
+        TestOptions {
+            rpc: RPC_ADDR,
+            p2p: 11_021,
+            proxy: 11_022,
+            rest_addr: 11_023,
+            grpc_addr: 11_024,
+        },
+    )?;
 
     let tx_cmd = BankCommands::Send {
         to_address: AccAddress::from_bech32("cosmos180tr8wmsk8ugt32yynj8efqwg3yglmpwp22rut")?,
@@ -116,7 +148,7 @@ fn send_tx() -> anyhow::Result<()> {
                 from_key: KEY_NAME.to_owned(),
                 home: tendermint.to_path_buf(),
             }),
-            node: format!("http://localhost:{}/", tendermint.rpc_addr().port()).parse()?,
+            node: format!("http://localhost:{}/", RPC_ADDR).parse()?,
             chain_id: ChainId::from_str("test-chain")?,
             fees: None,
             inner: WrappedGaiaTxCommands(GaiaTxCommands::Bank(BankTxCli { command: tx_cmd })),
@@ -166,8 +198,19 @@ fn send_tx() -> anyhow::Result<()> {
 /// NOTE: This test doesn't check resulted hash and what events occured. It tries to check that our app works under *sign* some load
 #[test]
 fn send_tx_in_parallel() -> anyhow::Result<()> {
+    const RPC_ADDR: u16 = 11_030;
+
     let coins = 200_000_000_u32;
-    let (tendermint, _server_thread) = run_gaia_and_tendermint(coins)?;
+    let (tendermint, _server_thread) = run_gaia_and_tendermint(
+        coins,
+        TestOptions {
+            rpc: RPC_ADDR,
+            p2p: 11_031,
+            proxy: 11_032,
+            rest_addr: 11_033,
+            grpc_addr: 11_034,
+        },
+    )?;
 
     static COUNTER: AtomicU8 = AtomicU8::new(10); // This makes transaction's different
 
@@ -189,7 +232,7 @@ fn send_tx_in_parallel() -> anyhow::Result<()> {
                     from_key: KEY_NAME.to_owned(),
                     home: tendermint.to_path_buf(),
                 }),
-                node: format!("http://localhost:{}/", tendermint.rpc_addr().port()).parse()?,
+                node: format!("http://localhost:{}/", RPC_ADDR).parse()?,
                 chain_id: ChainId::from_str("test-chain")?,
                 fees: None,
                 inner: WrappedGaiaTxCommands(GaiaTxCommands::Bank(BankTxCli { command: tx_cmd })),

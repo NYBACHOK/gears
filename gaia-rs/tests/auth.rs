@@ -13,14 +13,23 @@ use gears::{
     types::address::AccAddress,
 };
 
-use utilities::run_gaia_and_tendermint;
+use utilities::{run_gaia_and_tendermint, TestOptions};
 
 #[path = "./utilities.rs"]
 mod utilities;
 
 #[test]
 fn account_query() -> anyhow::Result<()> {
-    let (tendermint, _server_thread) = run_gaia_and_tendermint(34)?;
+    let (_tendermint, _server_thread) = run_gaia_and_tendermint(
+        34,
+        TestOptions {
+            rpc: 10_000,
+            p2p: 10_001,
+            proxy: 10_002,
+            rest_addr: 10_003,
+            grpc_addr: 10_004,
+        },
+    )?;
 
     let acc_adress = AccAddress::from_bech32("cosmos1syavy2npfyt9tcncdtsdzf7kny9lh777pahuux")
         .expect("Valid value");
@@ -28,9 +37,9 @@ fn account_query() -> anyhow::Result<()> {
     let query = AccountCommand {
         address: acc_adress.clone(),
     };
- 
+
     let cmd = QueryCommand {
-        node: format!("http://localhost:{}/", tendermint.rpc_addr().port()).parse()?,
+        node: format!("http://localhost:{}/", 10_000).parse()?,
         height: None,
         inner: WrappedGaiaQueryCommands(GaiaQueryCommands::Auth(AuthQueryCli {
             command: AuthCommands::Account(query),
